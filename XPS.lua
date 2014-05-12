@@ -156,7 +156,7 @@ function XPS:new(o)
 	return o
 end
 function XPS:Init()
-	Apollo.RegisterAddon(self, false, "", {
+	Apollo.RegisterAddon(self, true, "XPS", {
 		"Drafto:XPS:Config",
 		"Gemini:Logging-1.2", 
 		"Drafto:Lib:LuaUtils-1.2", 
@@ -2658,6 +2658,10 @@ end
 --- When the Close button is clicked
 function XPS:OnClose(wndHandler, wndControl)
 	wndHandler:Show(false)
+end
+
+function XPS:OnConfigure(wndHandler, wndControl)
+	self.config:Show(true)
 end
 
 function XPS:OnCombatHistoryClose(wndHandler, wndControl)

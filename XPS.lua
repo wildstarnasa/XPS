@@ -2400,6 +2400,20 @@ end
 function XPS:UpdateThreatMeter(tThreats, tValues)
 	if #tThreats == 0 then return end
 
+	-- Transform dataset
+	local tNames = {}
+	local tActualValues = {}
+	for i,t in ipairs(tThreats) do 
+		local nValue = tValues[i]
+		if t:GetName() and nValue and nValue > 1 then
+			table.insert(tNames, t:GetName() .. " (" .. tValues[i] .. ")")
+			table.insert(tActualValues, nValue)
+		end
+	end
+
+	-- Sometimes the tValues can be 0, so exit out if we have no real threat
+	if #tActualValues == 0 then return end
+
 	-- Initialize plot if this is the first update
 	if self.plotThreatMeter == nil then 
 		self.plotThreatMeter = PixiePlot:New(self.wndThreatMeter:FindChild("Plot"))
@@ -2411,17 +2425,6 @@ function XPS:UpdateThreatMeter(tThreats, tValues)
 	
 	-- Remove old datasets
 	self.plotThreatMeter:RemoveAllDataSets()
-	
-	-- Transform dataset
-	local tNames = {}
-	local tActualValues = {}
-	for i,t in ipairs(tThreats) do 
-		local nValue = tValues[i]
-		if t:GetName() and nValue and nValue > 1 then
-			table.insert(tNames, t:GetName() .. " (" .. tValues[i] .. ")")
-			table.insert(tActualValues, nValue)
-		end
-	end
 	
 	-- Add dataset
 	self.plotThreatMeter:AddDataSet({

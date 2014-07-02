@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <Addon Author="draftomatic" APIVersion="8" Name="XPS" Description="">
-    <Script Name="inspect.lua"/>
-    <Script Name="GeminiLogging.lua"/>
-    <Script Name="drafto_LuaUtils.lua"/>
-    <Script Name="XmlDocument.lua"/>
-    <Script Name="PixiePlot.lua"/>
+    <Script Name="libs\GeminiLogging.lua"/>
+    <Script Name="libs\drafto_LuaUtils.lua"/>
+    <Script Name="libs\XmlDocument.lua"/>
+    <Script Name="libs\PixiePlot.lua"/>
     <Script Name="XPSConfig.lua"/>
     <Script Name="XPS.lua"/>
     <Form Name="XPSConfig.xml"/>

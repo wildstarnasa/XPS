@@ -4,12 +4,13 @@ local XmlNode = {}
 ---------------------------------------------------------------------------
 -- XmlDocument
 ---------------------------------------------------------------------------
+local CreateNodeFromTable
 
 function XmlDocument.New()
 	local self = {}
-    
+
 	local tRoot = nil
-	
+
 	function self:GetRoot()
 		return tRoot
 	end
@@ -21,7 +22,7 @@ function XmlDocument.New()
 	function self:NewNode(strTag, tAttributes)
 		return XmlNode.New(self, strTag, tAttributes)
 	end
-	
+
 	function self:ToXmlDoc()
 		return XmlDoc.CreateFromTable(tRoot:ToTable())
 	end
@@ -31,21 +32,21 @@ function XmlDocument.New()
 			return tRoot:ToTable()
 		end
 	end
-	
+
 	function self:Serialize()
 		if tRoot then
 			return tRoot:Serialize()
 		end
 	end
-	
+
     return self
 end
 
 function XmlDocument.NewForm()
 	local self = {}
-    
+
 	local tRoot = XmlNode.New(self, "Forms", {})
-	
+
 	function self:GetRoot()
 		return tRoot
 	end
@@ -57,7 +58,7 @@ function XmlDocument.NewForm()
 	function self:NewNode(strTag, tAttributes)
 		return XmlNode.New(self, strTag, tAttributes)
 	end
-	
+
 	function self:NewFormNode(strName, tAttributes)
 		local tForm = self:NewNode("Form", tAttributes)
 		tForm:Attribute("Name", strName)
@@ -95,28 +96,30 @@ function XmlDocument.NewForm()
 	function self:Serialize()
 		return tRoot:Serialize()
 	end
-	
+
     return self
 end
 
-function XmlDocument.CreateFromTable(tXml)
-	local tDoc = self.New()
-	local tRoot = CreateNodeFromTable(tXml)
-	for i,v in ipairs(tXml) do
-		AddChildFromTable(v, tRoot)
-	end
-	tDoc:SetRoot(tRoot)
-end
-
-local function AddChildFromTable(tXml, tParent)
-	local tNode = CreateNodeFromTable(tXml)
+local function AddChildFromTable(tXml, tParent, tDoc)
+	local tNode = CreateNodeFromTable(tXml, tDoc)
 	tParent:AddChild(tNode)
 	for i,v in ipairs(tXml) do
-		AddChildFromTable(v, tNode)
+		AddChildFromTable(v, tNode, tDoc)
 	end
 end
 
-local function CreateNodeFromTable(tXml)
+function XmlDocument.CreateFromTable(tXml)
+	local tDoc = XmlDocument.New()
+	local tRoot = CreateNodeFromTable(tXml, tDoc)
+	for i,v in ipairs(tXml) do
+		AddChildFromTable(v, tRoot, tDoc)
+	end
+	tDoc:SetRoot(tRoot)
+
+	return tDoc
+end
+
+function CreateNodeFromTable(tXml, tDoc)
 	local tNode = tDoc:NewNode(tXml.__XmlNode)
 	for k,v in pairs(tXml) do
 		tNode:Attribute(k, v)
@@ -127,7 +130,7 @@ end
 function XmlDocument.CreateFromFile(strPath)
 	local xmlDoc = XmlDoc.CreateFromFile(strPath)
 	if not xmlDoc then return end
-	return self.CreateFromTable(xmlDoc:ToTable())
+	return XmlDocument.CreateFromTable(xmlDoc:ToTable())
 end
 
 ---------------------------------------------------------------------------
@@ -135,25 +138,25 @@ end
 ---------------------------------------------------------------------------
 
 function XmlNode.New(tDoc, strTag, tAttributes)
-	
+
 	tAttributes = true and tAttributes or {}
-	
-    local self = {}
+
+	local self = {}
 	local tChildren = {}
 	local strText = ""
-	
+
 	function self:GetDocument()
 		return tDoc
 	end
-	
+
 	function self:SetDocument(tDocument)
 		tDoc = tDocument
 	end
-	
+
 	function self:GetChildren()
 		return tChildren
 	end
-	
+
 	function self:AddChild(tNode)
 		table.insert(tChildren, tNode)
 		tNode:SetDocument(tDoc)
@@ -171,7 +174,7 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 	function self:GetTag()
 		return strTag
 	end
-	
+
 	function self:Attribute(strName, value)
 		if value ~= nil then
 			tAttributes[strName] = value
@@ -197,14 +200,14 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 			return strText
 		end
 	end
-	
+
 	function self:EachChild(fn)
 		for i,v in ipairs(tChildren) do
 			pcall(fn, v)
 			self:EachChild(fn)
 		end
 	end
-	
+
 	function self:FindChild(fn)
 		local tNode = nil
 		for i,v in ipairs(tChildren) do
@@ -221,17 +224,17 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 		end
 		return tNode
 	end
-	
+
 	function self:FindChildByName(strName)
 		return self:FindChild(function(tNode)
 			return tNode:Attribute("Name") == strName
 		end)
 	end
-	
+
 	function self:Clone()
 		return tDoc:NewNode(strTag, tAttributes)
 	end
-	
+
 	function self:ToTable(tXml)
 		-- This node
 		local tNode = {__XmlNode = strTag}
@@ -250,7 +253,7 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 				tNode[k] = v
 			end
 		end
-		
+
 		-- Children nodes
 		for i,v in ipairs(tChildren) do
 			v:ToTable(tNode)
@@ -258,28 +261,28 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 		if tXml then
 			table.insert(tXml, tNode)
 		end
-		
+
 		return tNode
 	end
-	
+
 	function self:Serialize(nLevel)
 		-- Recursion variables
 		nLevel = true and nLevel or 0
-		
+
 		-- Indenting
 		local strIndent = ""
 		for i=1,nLevel do
 			strIndent = strIndent .. "  "
 		end
-		
+
 		local strXml = strIndent .. "<" .. strTag
-		
+
 		-- Start tag
 		for k,v in pairs(tAttributes) do
 			strXml = strXml .. " " .. k .. "=\"" .. tostring(v) .. "\""
 		end
 		strXml = strXml .. ">\n"
-		
+
 		-- Inner text or children, not both
 		if #tChildren > 0 then
 			-- Children add themselves to string
@@ -289,16 +292,16 @@ function XmlNode.New(tDoc, strTag, tAttributes)
 		elseif strText then
 			strXml = strXml .. strText .. "\n"
 		end
-		
+
 		-- End tag
 		strXml = strXml .. strIndent .. "</" .. strTag .. ">\n"
-		
+
 		return strXml
 	end
-	
+
 	return self
 end
 
 -- Register Packages
-Apollo.RegisterPackage(XmlDocument, "Drafto:Lib:XmlDocument-1.0", 3, {})
+Apollo.RegisterPackage(XmlDocument, "Drafto:Lib:XmlDocument-1.0", 5, {})
 --Apollo.RegisterPackage(XmlNode, "Drafto:Lib:XmlNode-2.0", 1, {})

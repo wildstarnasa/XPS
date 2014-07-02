@@ -102,12 +102,12 @@ end
 
 --- Redraws graph using current dataSets and settings.
 function PixiePlot:Redraw()
-	
+
 	-- Reset Pixies
 	self.wnd:DestroyAllPixies()
-	
+
 	if self.nDataSets > 0 then
-	
+
 		-- Draw axes
 		if self.tOpt.bDrawXAxis then
 			self:DrawXAxis()
@@ -115,7 +115,7 @@ function PixiePlot:Redraw()
 		if self.tOpt.bDrawYAxis then
 			self:DrawYAxis()
 		end
-		
+
 		-- Draw DataSets
 		local i = 1
 		for _,dataSet in pairs(self.dataSets) do
@@ -123,7 +123,7 @@ function PixiePlot:Redraw()
 			self:PlotDataSet(dataSet, color, i-1)
 			i = i + 1
 		end
-		
+
 		-- Draw labels
 		if self.tOpt.bDrawXAxisLabel then
 			self:DrawXAxisLabel()
@@ -141,7 +141,7 @@ function PixiePlot:Redraw()
 				self:DrawYValueLabels()
 			end
 		end
-		
+
 		-- Draw grid lines
 		if self.tOpt.bDrawXGridLines then
 			self:DrawXGridLines()
@@ -149,7 +149,7 @@ function PixiePlot:Redraw()
 		if self.tOpt.bDrawYGridLines then
 			self:DrawYGridLines()
 		end
-		
+
 	end
 end
 
@@ -159,10 +159,10 @@ end
 --- Adds a dataset to plot on the next Redraw.
 -- @param dataSet An array of data to plot. The general format is as follows:
 --		dataSet = {xStart = xStart, values = {}}
---		xStart is the x-value of the first values element. This parameter allows you to shift the x position of the 
+--		xStart is the x-value of the first values element. This parameter allows you to shift the x position of the
 --		graph (for pieceswise plotting, or for lining up dataSets of different length and start position). Generally
 --		xStart will be the same for all dataSets.
---		
+--
 -- 		If ePlotStyle equals BAR, LINE, or STEM, values is an array of numbers representing y-values, e.g.:
 --		{-4, 5, 0, 3, 8}
 -- 		If ePlotStyle == SCATTER, values is an array of tables with x- and y-values, e.g.:
@@ -210,9 +210,9 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 	if clrSymbol == nil then
 		clrSymbol = color
 	end
-	
+
 	local ePlotStyle = self.tOpt.ePlotStyle
-	
+
 	-- Line Plot
 	if ePlotStyle == self.LINE or ePlotStyle == self.STEM then
 		local fXRange = self.fXMax - self.fXMin
@@ -291,9 +291,9 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 					end
 				end
 			end
-			
+
 		elseif self.tOpt.eCoordinateSystem == self.POLAR then
-			
+
 			local vPrev
 			for i, v in ipairs(dataSet.values) do
 				if v == math.huge then v = 0 end
@@ -341,7 +341,7 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 					if v == math.huge then v = 0 end
 					local xActual = dataSet.xStart + (i - 2) * self.fXInterval
 					local xCart, vCart = polToCart(xActual, v)
-					
+
 					local fSymbolSize = self.tOpt.fSymbolSize
 					if fSymbolSize == nil then
 						fSymbolSize = self.tOpt.fLineWidth * 2
@@ -370,23 +370,19 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 							self.tOpt.wndOverlayLoadCallback(tData, wnd)
 						end
 					end
-				end	
+				end
 			end
 		end
-		
+
 	elseif ePlotStyle == self.SCATTER then
 		local fXRange = self.fXMax - self.fXMin
 		local fYRange = self.fYMax - self.fYMin
-		if self.tOpt.eCoordinateSystem == self.POLAR then
-			local xCart, yCart = polToCart(v.x, v.y)
-			v = {
-				x = xCart,
-				y = yCart
-			}
-		end
 		if self.tOpt.bScatterLine == true then
 			local vPrev
 			for i, v in ipairs(dataSet.values) do
+				if self.tOpt.eCoordinateSystem == self.POLAR then
+					v.x, v.y = polToCart(v.x, v.y)
+				end
 				if i > 1 then
 					self:DrawLine(
 						{
@@ -438,7 +434,7 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 				end
 			end
 		end
-		
+
 	elseif self.tOpt.ePlotStyle == self.BAR then
 		--Print("drawing " .. #dataSet.values .. " bars")
 		if self.tOpt.eBarOrientation == self.VERTICAL then
@@ -454,8 +450,8 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 					y1 = 1 + self.tOpt.fXLabelMargin,
 					x2 = self.tOpt.fYLabelMargin + self.tOpt.fBarMargin + (i-1) * self.tOpt.fBarSpacing + (i-1) * fXIntervalWidth + fTotalBarWidth * nBarIndex + self.tOpt.fBarMargin + fActualBarWidth,
 					y2 = 1 + self.tOpt.fXLabelMargin + (v / self.fYMax) * maxHeight
-				}, 
-				self.tOpt.strBarSprite, 
+				},
+				self.tOpt.strBarSprite,
 				color,
 				self.tOpt.clrBarLabel,
 				label)
@@ -473,8 +469,8 @@ function PixiePlot:PlotDataSet(dataSet, color, nBarIndex)
 					x1 = 1 + self.tOpt.fYLabelMargin,
 					y2 = self.tOpt.fXLabelMargin + self.tOpt.fBarMargin + (i-1) * self.tOpt.fBarSpacing + (i-1) * fYIntervalHeight + fTotalBarHeight * nBarIndex + self.tOpt.fBarMargin + fActualBarHeight,
 					x2 = 1 + self.tOpt.fYLabelMargin + (v / self.fYMax) * maxWidth
-				}, 
-				self.tOpt.strBarSprite, 
+				},
+				self.tOpt.strBarSprite,
 				color,
 				self.tOpt.clrBarLabel,
 				label)
@@ -588,11 +584,11 @@ end
 --- Draws X value labels with current options.
 function PixiePlot:DrawXValueLabels(fXRange)
 	local maxWidth = self.wnd:GetWidth() - self.tOpt.fYLabelMargin - self.tOpt.fPlotMargin
-	
+
 	if fXRange == nil then
 		fXRange = self.fXMax - self.fXMin
 	end
-	
+
 	local nLabels = self.tOpt.nXValueLabels
 	local fInterval = fXRange / nLabels
 	for i=0,nLabels do
@@ -625,11 +621,11 @@ end
 --- Draws Y value labels with current options.
 function PixiePlot:DrawYValueLabels(fYRange)
 	local maxHeight = self.wnd:GetHeight() - self.tOpt.fXLabelMargin - self.tOpt.fPlotMargin
-	
+
 	if fYRange == nil then
 		fYRange = self.fYMax - self.fYMin
 	end
-	
+
 	local nLabels = self.tOpt.nYValueLabels
 	local fInterval = fYRange / nLabels
 	for i=0,nLabels do
@@ -664,7 +660,7 @@ function PixiePlot:DrawXGridLines()
 	local nLabels = self.tOpt.nXValueLabels
 	local maxWidth = self.wnd:GetWidth() - self.tOpt.fYLabelMargin - self.tOpt.fPlotMargin
 	local maxHeight = self.wnd:GetHeight() - self.tOpt.fXLabelMargin - self.tOpt.fPlotMargin
-	
+
 	if self.tOpt.eCoordinateSystem == self.CARTESIAN or self.tOpt.bPolarGridLines == false then
 		local fXRange = self.fXMax - self.fXMin
 		local fInterval = fXRange / nLabels
@@ -710,7 +706,7 @@ end
 function PixiePlot:DrawYGridLines()
 	local maxHeight = self.wnd:GetHeight() - self.tOpt.fXLabelMargin - self.tOpt.fPlotMargin
 	local fYRange = self.fYMax - self.fYMin
-	
+
 	local nLabels = self.tOpt.nYValueLabels
 	local fInterval = fYRange / nLabels
 	for i=0,nLabels do
@@ -770,7 +766,7 @@ end
 -- @param color A table with keys a, r, g, b. Values should be numbers 0.0-1.0
 function PixiePlot:DrawSymbol(pos, size, sprite, color)
 	--Print("Drawing symbol at: " .. pos.x .. ", " .. pos.y)
-	--Print("Pixie color: " .. 
+	--Print("Pixie color: " ..
 	local nPixieId = self.wnd:AddPixie({
 		strText = "",
 		bLine = false,
@@ -793,15 +789,15 @@ end
 --- Adds a data point tooltip.
 -- Flips y-axis.
 -- @param pos A table containing x1,y1,x2,y2 coordinates for the tooltip.
--- @param size Width and height of the tooltip. 
+-- @param size Width and height of the tooltip.
 function PixiePlot:AddWindowOverlay(pos, size)
 	local XmlDocument = Apollo.GetPackage("Drafto:Lib:XmlDocument-1.0").tPackage
 	if not XmlDocument then return end
 
-    local tDoc = XmlDocument.NewForm()
-    local tForm = tDoc:NewFormNode("PixiePlotOverlay", {
-    	TooltipType = "OnCursor",
-    	AnchorPoints = {0,0,0,0},
+	local tDoc = XmlDocument.NewForm()
+	local tForm = tDoc:NewFormNode("PixiePlotOverlay", {
+		TooltipType = "OnCursor",
+		AnchorPoints = {0,0,0,0},
 		AnchorOffsets = {
 			pos.x - size/2,
 			self.wnd:GetHeight() - (pos.y + size/2),
@@ -812,17 +808,17 @@ function PixiePlot:AddWindowOverlay(pos, size)
 
     tDoc:GetRoot():AddChild(tForm)
 	local wnd = tDoc:LoadForm("PixiePlotOverlay", self.wnd, self)
-	if not wnd then 
-		return 
+	if not wnd then
+		return
 	end
-	
+
 	wnd:AddEventHandler("MouseButtonUp", "OnWndMouseUp", self)
 	wnd:AddEventHandler("MouseButtonDown", "OnWndMouseDown", self)
 	wnd:AddEventHandler("MouseEnter", "OnWndMouseEnter", self)
 	wnd:AddEventHandler("MouseExit", "OnWndMouseExit", self)
-	
+
 	wnd:Show(true)
-	
+
 	return wnd
 end
 
@@ -833,7 +829,7 @@ end
 -- @param color A table with keys a, r, g, b. Values should be numbers 0.0-1.0
 function PixiePlot:DrawRectangle(rect, sprite, color, clrText, text)
 	--Print("Drawing rect: " .. rect.x1 .. ", " .. rect.y1 .." -> " .. rect.x2 .. ", " .. rect.y2)
-	
+
 	-- Draw rectangle
 	local nPixieId = self.wnd:AddPixie({
 		bLine = false,
@@ -853,7 +849,7 @@ function PixiePlot:DrawRectangle(rect, sprite, color, clrText, text)
 		},
 		fRotation = 0
 	})
-	
+
 	-- Draw text as a separate pixie so it doesn't get cut off by short bars
 	if text ~= nil then
 		local x1, x2, y1, y2, lineWidth, DT_VCENTER
@@ -1009,7 +1005,7 @@ setmetatable(PixiePlot, {
 		local pp = {
 			wnd = wndContainer
 		}
-		
+
 		-- Plotting variables
 		pp.dataSets = {}			-- This is not an array, though it does use integer keys.
 		pp.nNumDataSets = 0			-- Current number of dataSets (only used for bar graphs)
@@ -1019,7 +1015,7 @@ setmetatable(PixiePlot, {
 		pp.fXMax = nil				-- Right plot viewbox bound
 		pp.fYMin = nil				-- Top plot viewbox bound
 		pp.fYMax = nil				-- Bottom plot viewbox bound
-		
+
 		-- Plotting Options
 		if tOpt then
 			pp.tOpt = tOpt
@@ -1034,7 +1030,7 @@ setmetatable(PixiePlot, {
 local tDefaultOptions = {
 	ePlotStyle = PixiePlot.LINE,
 	eCoordinateSystem = PixiePlot.CARTESIAN,
-	
+
 	fYLabelMargin = 25,
 	fXLabelMargin = 25,
 	fPlotMargin = 10,
@@ -1068,35 +1064,35 @@ local tDefaultOptions = {
 	nYLabelDecimals = 1,
 	xValueFormatter = nil,
 	yValueFormatter = nil,
-	
+
 	bDrawXAxis = true,
 	bDrawYAxis = true,
 	clrXAxis = clrWhite,
 	clrYAxis = clrWhite,
 	fXAxisWidth = 2,
 	fYAxisWidth = 2,
-	
+
 	bDrawSymbol = true,
 	fSymbolSize = nil,
 	strSymbolSprite = "WhiteCircle",
 	clrSymbol = nil,
-	
+
 	strLineSprite = nil,
 	fLineWidth = 3,
 	bScatterLine = false,
-	
+
 	fBarMargin = 5,			-- Space between bars in each group
 	fBarSpacing = 20,		-- Space between groups of bars
 	fBarOrientation = PixiePlot.VERTICAL,
 	strBarSprite = "WhiteFill",
 	strBarFont = "CRB_Interface11",
 	clrBarLabel = clrWhite,
-	
+
 	bWndOverlays = false,
 	fWndOverlaySize = 6,
 	wndOverlayMouseEventCallback = nil,
 	wndOverlayLoadCallback = nil,
-	
+
 	aPlotColors = {
 		{a=1,r=0.858,g=0.368,b=0.53},
 		{a=1,r=0.363,g=0.858,b=0.500},
@@ -1115,7 +1111,7 @@ function PixiePlot:New(wndContainer, tOpt)
 	local this = {
 		wnd = wndContainer
 	}
-	
+
 	-- Set plotting variables
 	this.dataSets = {}				-- This is not an array, though it does use integer keys.
 	this.nNumDataSets = 0			-- Current number of dataSets (only used for bar graphs)
@@ -1125,19 +1121,19 @@ function PixiePlot:New(wndContainer, tOpt)
 	this.fXMax = nil				-- Right plot viewbox bound
 	this.fYMin = nil				-- Top plot viewbox bound
 	this.fYMax = nil				-- Bottom plot viewbox bound
-	
+
 	-- Set plotting options
 	if tOpt then
 		this.tOpt = tOpt
 	else
 		this.tOpt = tDefaultOptions
 	end
-	
+
 	-- Inheritance
-    setmetatable(this, self)
-    self.__index = self 
-    return this
+	setmetatable(this, self)
+	self.__index = self
+	return this
 end
 
 -- Register Library
-Apollo.RegisterPackage(PixiePlot, "Drafto:Lib:PixiePlot-1.4", 3, {"Drafto:Lib:XmlDocument-1.0"})
+Apollo.RegisterPackage(PixiePlot, "Drafto:Lib:PixiePlot-1.4", 4, {"Drafto:Lib:XmlDocument-1.0"})
